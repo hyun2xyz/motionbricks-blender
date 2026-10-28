@@ -55,7 +55,7 @@ except ImportError as exc:
 
 FPS = 30
 FORMAT = "motionbricks-blender-npz"
-FORWARD = np.array([0.0, -1.0, 0.0])  # the bind pose faces -Y in runtime space
+FORWARD = np.array([0.0, 1.0, 0.0])  # hips-local axis that points where the body faces
 LEAD_SECONDS = 1.0  # how far ahead the moving target is placed
 TRANSITION_EARLY_BY = 4
 TURN_THRESHOLD = 15.0  # degrees of steering change that trigger a new generation
