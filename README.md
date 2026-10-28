@@ -5,6 +5,9 @@ character, with the scene's greybox cubes, a checker floor, a sun and a follow c
 
 - **Add-on** (`addon/motionbricks_importer`): `File › Import › MotionBricks (.npz)` and a
   **MotionBricks** tab in the 3D Viewport sidebar (`N`). Blender 4.2 or newer (tested on 5.1.2 and 5.2.3 LTS).
+- **Walker** (`walker/mb_walk.py`): walks the character along a course you write in a small JSON
+  file and saves an `.npz` for the add-on. It uses **no motion data at all**, so you can render and
+  publish the result under the terms in [Licences](#licences).
 - **Recorder** (`recorder/mb_record.py`): runs MotionBricks' Scene Preview and saves what you play
   to an `.npz` file for the add-on.
 
@@ -33,10 +36,49 @@ The first launch builds a TensorRT plan for your GPU, which takes a few minutes.
 uv run python -m app.scene_preview --scene assets/scenes/soma_gym.scene.json
 ```
 
-## 2. Record a motion
+## 2. Make a motion
 
-Download this repository (green **Code › Download ZIP**, or the release below). From the
-`motionbricks` folder, run the recorder:
+Download this repository (green **Code › Download ZIP**) and unzip it next to your `motionbricks`
+folder.
+
+### A. Walk a course (no motion data)
+
+Copy `walker/courses/zigzag.json` to your `motionbricks` folder as `my_course.json` and edit it:
+
+```json
+{
+  "start": [0, 0, 90],
+  "waypoints": [[2.0, -0.9], [3.6, -0.9], [4.6, 0.0], [12.0, 0.0]],
+  "end_yaw": 180,
+  "speed": 1.2,
+  "cubes": [{"name": "Box_A", "center": [2.8, 0.3, 0.5], "size": [1.0, 1.0, 1.0], "color": [0.62, 0.62, 0.64]}]
+}
+```
+
+- `start`: x, y in metres and the direction the character faces (degrees; 0 faces −Y, 90 faces +X).
+- `waypoints`: points to walk through. The character stops at the last one and turns to `end_yaw`.
+- `speed`: walking speed in m/s (about 0.8 to 1.6 looks natural).
+- `cubes`: greybox scenery for Blender. The character does not react to them, so route the waypoints around them.
+
+From the `motionbricks` folder:
+
+```sh
+uv run python ../motionbricks-blender-main/walker/mb_walk.py --course my_course.json --out my_course.npz
+```
+
+It takes a few seconds (plus a few minutes on the very first run, while TensorRT builds a plan).
+
+**How it works.** MotionBricks fills in the motion between a few *context* poses (where the
+character is now) and a few *target* poses (where it should be). Every target here comes from the
+SOMA bind pose that ships with the MotionBricks code, with the arms lowered, or from poses the model
+generated a moment earlier: the first, rough steps toward a stand 1.3 m ahead give a walk template,
+two straight 10 m walks refine it, and then the course is walked with the same loop as MotionBricks'
+`docs/examples/locomotion_loop.py`. Walking, turning and stopping only; jumps and sitting need target
+poses you are licensed to use.
+
+### B. Record the Scene Preview
+
+From the `motionbricks` folder, run the recorder:
 
 ```sh
 uv run python path/to/motionbricks-blender/recorder/mb_record.py --scene assets/scenes/soma_gym.scene.json --out my_walk.npz
@@ -52,6 +94,8 @@ uv run python path/to/mb_record.py --scene assets/scenes/soma_gym.scene.json --o
 ```
 
 You can build your own greybox course with `uv run python -m app.scene_editor` and record it with `--scene`.
+The demo scenes and Smart Primitives take their target poses from NVIDIA's evaluation-only sample
+motions, so treat these recordings as internal tests.
 
 ## 3. Install the add-on
 
@@ -76,6 +120,7 @@ matches MotionBricks' own skinning. Every frame is keyed, so you can edit, retim
 | Part | Licence |
 | --- | --- |
 | Add-on (`addon/`) | GPL-3.0-or-later ([LICENSE](LICENSE)) |
+| Walker (`walker/`) | Apache-2.0 ([walker/LICENSE](walker/LICENSE)) |
 | Recorder (`recorder/`) | Apache-2.0 ([recorder/LICENSE](recorder/LICENSE)) |
 | MotionBricks code | Apache-2.0 (NVIDIA) |
 | MotionBricks models | NVIDIA Open Model Agreement |
@@ -84,8 +129,9 @@ matches MotionBricks' own skinning. Every frame is keyed, so you can edit, retim
 
 This repository contains no NVIDIA models, sample motions or meshes. **Check the terms before you
 publish renders.** The bundled demo scenes place target poses taken from the evaluation-only
-sample motions. For public work, author your own target poses, for example from motion data you
-are licensed to use.
+sample motions. For public work, use the walker (no motion data) or author your own target poses,
+for example from motion data you are licensed to use. NVIDIA does not claim ownership of model
+outputs under the Open Model Agreement; read it for the full terms.
 
 ---
 
@@ -95,11 +141,20 @@ NVIDIA **MotionBricks**가 만든 동작을 Blender로 가져오는 무료 애�
 사람(SOMA) 캐릭터에 뼈대·몸·키프레임을 만들고, 장면의 그레이박스 상자와 체커 바닥, 해, 따라가는 카메라까지 넣어 줍니다.
 
 1. **MotionBricks 설치**: 위 1번 명령(`git clone` → `git lfs pull` → `uv sync`). NVIDIA RTX GPU가 필요합니다.
-2. **동작 녹화**: `motionbricks` 폴더에서 `uv run python …/recorder/mb_record.py --scene … --out my_walk.npz`
-   - 창이 뜨면 W A S D로 걷고, Space로 뜁니다. 창을 닫으면 저장됩니다.
+2. **동작 만들기**: 이 저장소를 ZIP으로 받아 `motionbricks` 폴더 옆에 풉니다.
+   - **코스 걷기(동작 데이터 없음, 공개해도 되는 방법)**: `walker/courses/zigzag.json`을 `motionbricks` 폴더에 `my_course.json`으로 복사해 숫자를 고칩니다.
+     - `start`: 출발점 x, y(미터)와 바라보는 방향(도, 0 = −Y, 90 = +X)
+     - `waypoints`: 지나갈 지점. 마지막 지점에서 멈추고 `end_yaw` 방향으로 섭니다.
+     - `speed`: 걷는 속도(m/s, 0.8~1.6 정도가 자연스럽습니다)
+     - `cubes`: Blender에 놓을 그레이박스 상자. 캐릭터는 상자를 피하지 않으니 지점을 상자 옆으로 잡습니다.
+     - 실행: `uv run python ../motionbricks-blender-main/walker/mb_walk.py --course my_course.json --out my_course.npz`
+     - 원리: 목표 자세를 MotionBricks 코드에 들어 있는 기본 T자세(팔만 내림)와, 모델이 방금 만든 걸음에서만 가져옵니다. 걷기·꺾기·멈추기만 됩니다.
+   - **Scene Preview 녹화**: `uv run python …/recorder/mb_record.py --scene … --out my_walk.npz`
+     - 창이 뜨면 W A S D로 걷고, Space로 뜁니다. 창을 닫으면 저장됩니다.
+     - 데모 장면과 Smart Primitive는 평가 전용 샘플 동작을 쓰므로 내부 시험용입니다.
 3. **애드온 설치**: Releases에서 `motionbricks_importer-0.1.0.zip`을 받습니다(압축은 풀지 않습니다).
    - Blender **Edit › Preferences › Add-ons** → 오른쪽 위 **⌄** → **Install from Disk…**
 4. **가져오기**: **File › Import › MotionBricks (.npz)**, 또는 3D 뷰에서 **N** → **MotionBricks** 탭 → **Import Motion (.npz)**
    - Space로 재생합니다.
 
-**라이선스**: 애드온은 GPL-3.0-or-later, 녹화 스크립트는 Apache-2.0입니다. MotionBricks의 샘플 동작은 평가 전용이므로, 렌더를 공개하기 전에 조건을 확인하세요.
+**라이선스**: 애드온은 GPL-3.0-or-later, 걷기 생성기와 녹화 스크립트는 Apache-2.0입니다. MotionBricks의 샘플 동작은 평가 전용이므로, 렌더를 공개하기 전에 조건을 확인하세요.
