@@ -1,0 +1,21 @@
+schema_version = "1.0.0"
+
+id = "motionbricks_importer"
+version = "0.1.0"
+name = "MotionBricks Importer (unofficial)"
+tagline = "Import MotionBricks motion recordings as an animated character"
+maintainer = "hyun2xyz"
+type = "add-on"
+website = "https://github.com/hyun2xyz/motionbricks-blender"
+tags = ["Animation", "Import-Export"]
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+copyright = ["2026 hyun2xyz"]
+
+[permissions]
+files = "Read MotionBricks motion files (.npz) from disk"
+
+[build]
+paths_exclude_pattern = ["__pycache__/", "/.git/", "*.zip"]
