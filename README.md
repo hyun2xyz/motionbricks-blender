@@ -11,6 +11,17 @@ character, with the scene's greybox cubes, a checker floor, a sun and a follow c
 - **Recorder** (`recorder/mb_record.py`): runs MotionBricks' Scene Preview and saves what you play
   to an `.npz` file for the add-on.
 
+## Let an AI coding agent set it up
+
+Setting up MotionBricks by hand takes a dozen steps. Instead, open **Codex** or **Claude Code** on a PC with an
+NVIDIA RTX GPU and paste:
+
+> Use https://github.com/hyun2xyz/motionbricks-blender to make a MotionBricks demo in Blender and show me what it can do.
+
+The agent follows [AGENTS.md](AGENTS.md): it checks the GPU, installs what is missing (asking first), downloads
+MotionBricks, generates a walk with the walker, installs this add-on, builds a demo scene with
+`tools/make_demo.py` and opens it in Blender. The manual steps below do the same thing.
+
 > This project is not affiliated with or endorsed by NVIDIA. MotionBricks is
 > [NVlabs/motionbricks](https://github.com/NVlabs/motionbricks) (SIGGRAPH 2026).
 
@@ -120,7 +131,7 @@ matches MotionBricks' own skinning. Every frame is keyed, so you can edit, retim
 | Part | Licence |
 | --- | --- |
 | Add-on (`addon/`) | GPL-3.0-or-later ([LICENSE](LICENSE)) |
-| Walker (`walker/`) | Apache-2.0 ([walker/LICENSE](walker/LICENSE)) |
+| Walker (`walker/`), demo script (`tools/`) | Apache-2.0 ([walker/LICENSE](walker/LICENSE)) |
 | Recorder (`recorder/`) | Apache-2.0 ([recorder/LICENSE](recorder/LICENSE)) |
 | MotionBricks code | Apache-2.0 (NVIDIA) |
 | MotionBricks models | NVIDIA Open Model Agreement |
@@ -138,6 +149,12 @@ outputs under the Open Model Agreement; read it for the full terms.
 ## 한국어 안내
 
 NVIDIA **MotionBricks**가 만든 동작을 Blender로 가져오는 무료 애드온입니다(비공식, NVIDIA와 관계없음).
+
+**AI 코딩 에이전트에게 맡기기**: NVIDIA RTX GPU가 있는 PC에서 Codex나 Claude Code를 열고 이렇게 붙여 넣으세요.
+
+> Use https://github.com/hyun2xyz/motionbricks-blender to make a MotionBricks demo in Blender and show me what it can do.
+
+에이전트가 [AGENTS.md](AGENTS.md)를 따라 GPU 확인 → 없는 도구 설치(먼저 물어봄) → MotionBricks 받기 → 걷기 생성 → 애드온 설치 → 데모 장면을 만들어 Blender에서 엽니다. 아래 수동 설치와 같은 일을 합니다.
 사람(SOMA) 캐릭터에 뼈대·몸·키프레임을 만들고, 장면의 그레이박스 상자와 체커 바닥, 해, 따라가는 카메라까지 넣어 줍니다.
 
 1. **MotionBricks 설치**: 위 1번 명령(`git clone` → `git lfs pull` → `uv sync`). NVIDIA RTX GPU가 필요합니다.
