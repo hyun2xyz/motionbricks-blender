@@ -60,7 +60,9 @@ git clone https://github.com/hyun2xyz/motionbricks-blender.git
 curl -L -o motionbricks_importer-0.1.0.zip https://github.com/hyun2xyz/motionbricks-blender/releases/download/v0.1.0/motionbricks_importer-0.1.0.zip
 ```
 
-The zip's SHA-256 is `dea3189a71e64e2f35a76aefc42f4a51b14aae980dc397cfb221fdf9a0796c71`; check it. Install and enable
+In Windows PowerShell, write `curl.exe` (plain `curl` is an alias there). The zip's SHA-256 is
+`dea3189a71e64e2f35a76aefc42f4a51b14aae980dc397cfb221fdf9a0796c71`; check it (`sha256sum` on Linux,
+`Get-FileHash motionbricks_importer-0.1.0.zip` in PowerShell). Install and enable
 the add-on (Blender stays closed):
 
 ```sh
