@@ -37,6 +37,7 @@ MotionBricks, generates a walk with the walker, installs this add-on, builds a d
 ```sh
 git clone --branch v0.2.0 https://github.com/NVlabs/motionbricks.git
 cd motionbricks
+git rev-parse HEAD   # should print 54fc563aeaaf819a753d72cc9fdc6713989cdd43
 git lfs pull
 uv sync
 ```

@@ -27,8 +27,8 @@ ap.add_argument("--spacing", type=float, default=0.0)
 args = ap.parse_args(argv)
 
 if not hasattr(bpy.ops.import_scene, "motionbricks"):
-    sys.exit("The MotionBricks Importer add-on is not enabled. Install it first: "
-             "blender --command extension install-file -r user_default -e motionbricks_importer-0.1.0.zip")
+    sys.exit("The MotionBricks Importer add-on is not enabled. Install the release zip first (AGENTS.md, step 3): "
+             "blender --command extension install-file -r user_default -e motionbricks_importer-<version>.zip")
 
 bpy.ops.wm.read_homefile(use_empty=True)  # keeps the preferences, so the add-on stays enabled
 scene = bpy.context.scene
@@ -44,7 +44,8 @@ for i, path in enumerate(args.npz):
                 obj.location.y -= args.spacing * i
     print(f"imported {path.name}")
 
-scene.render.engine = "BLENDER_EEVEE"
+engines = {item.identifier for item in scene.render.bl_rna.properties["engine"].enum_items}
+scene.render.engine = "BLENDER_EEVEE" if "BLENDER_EEVEE" in engines else "BLENDER_EEVEE_NEXT"  # 4.2-4.5: _NEXT
 scene.render.resolution_x, scene.render.resolution_y = 1920, 1080
 args.out.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(args.out.resolve()))

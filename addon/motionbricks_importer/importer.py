@@ -3,12 +3,13 @@
 
 """Build an animated SOMA character (and the scene's greybox cubes) from a MotionBricks recording.
 
-The recording comes from recorder/mb_record.py in this repository. It holds the SOMA mesh in
-skeleton space with its skin weights and inverse bind transforms, the local joint transforms of
-every frame, and the scene's solid cubes. The armature's rest pose is the bind pose, so Blender's
+The recording comes from walker/mb_walk.py or recorder/mb_record.py in this repository. It holds
+the SOMA mesh in skeleton space with its skin weights and inverse bind transforms, the local joint
+transforms of every frame, and the scene's solid cubes. The armature's rest pose is the bind pose, so Blender's
 armature deform reproduces MotionBricks' skinning (joint world x inverse bind x point) exactly.
 """
 
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -97,15 +98,59 @@ def _link(collection: bpy.types.Collection, obj: bpy.types.Object) -> bpy.types.
     return obj
 
 
+REQUIRED = ("fps", "joint_names", "parents", "inverse_bind", "model_to_runtime", "points", "faces",
+            "joint_indices", "joint_weights", "poses")
+OPTIONAL = ("format", "format_version", "source", "cube_names", "cube_xf", "cube_size", "cube_color")
+
+
+def _check_recording(rec: dict, name: str) -> None:
+    """Reject arrays that do not fit together before anything is built (a bad index can crash Blender)."""
+    missing = [key for key in REQUIRED if key not in rec]
+    if missing:
+        raise ValueError(f"{name} is missing {', '.join(missing)}.")
+    joints, points = len(rec["joint_names"]), len(rec["points"])
+    shapes = {"parents": (joints,), "inverse_bind": (joints, 7), "model_to_runtime": (7,), "points": (points, 3)}
+    for key, shape in shapes.items():
+        if rec[key].shape != shape:
+            raise ValueError(f"{name}: {key} has shape {rec[key].shape}, expected {shape}.")
+    poses, faces = rec["poses"], rec["faces"]
+    if poses.ndim != 3 or poses.shape[1:] != (joints, 7) or len(poses) == 0:
+        raise ValueError(f"{name}: poses must be [frames, {joints}, 7].")
+    if faces.ndim != 2 or faces.shape[1] != 3 or (faces.size and (faces.min() < 0 or faces.max() >= points)):
+        raise ValueError(f"{name}: faces must be [M, 3] vertex indices below {points}.")
+    indices, weights = rec["joint_indices"], rec["joint_weights"]
+    if indices.ndim != 2 or indices.shape != weights.shape or len(indices) != points:
+        raise ValueError(f"{name}: skin weights do not match the mesh.")
+    if indices.size and indices.max() >= joints:
+        raise ValueError(f"{name}: a skin weight uses a joint that does not exist.")
+    if any(p < -1 or p >= j for j, p in enumerate(rec["parents"].astype(int))):
+        raise ValueError("Joint parents must come before their children.")
+    if not 1 <= int(rec["fps"]) <= 240:
+        raise ValueError(f"{name}: fps {int(rec['fps'])} is out of range.")
+    if "cube_xf" in rec:
+        cubes = len(rec["cube_xf"])
+        for key, width in (("cube_xf", 7), ("cube_size", 3), ("cube_color", 3)):
+            if rec.get(key, np.zeros((0, 0))).shape != (cubes, width):
+                raise ValueError(f"{name}: {key} does not match cube_xf.")
+        if rec.get("cube_names", np.zeros(0)).shape != (cubes,):
+            raise ValueError(f"{name}: cube_names does not match cube_xf.")
+    for key in ("inverse_bind", "model_to_runtime", "points", "poses", "joint_weights"):
+        if not np.isfinite(rec[key]).all():
+            raise ValueError(f"{name}: {key} holds NaN or infinite values.")
+
+
 def load_recording(path: Path) -> dict:
+    if not zipfile.is_zipfile(path):
+        raise ValueError(f"{path.name} is not a MotionBricks .npz file.")
     with np.load(path, allow_pickle=False) as data:
-        recording = {key: data[key] for key in data.files}
+        recording = {key: data[key] for key in data.files if key in REQUIRED or key in OPTIONAL}
     found = str(recording["format"]) if "format" in recording else FORMAT
     version = int(recording["format_version"]) if "format_version" in recording else FORMAT_VERSION
     if found != FORMAT or version > FORMAT_VERSION:
         raise ValueError(f"{path.name} is not a supported MotionBricks recording ({found} v{version}).")
     if "points" not in recording:
         raise ValueError(f"{path.name} has no SOMA mesh. Only SOMA recordings are supported.")
+    _check_recording(recording, path.name)
     return recording
 
 
@@ -114,8 +159,6 @@ def import_recording(context, path: Path, options: ImportOptions) -> ImportResul
     names = [str(n) for n in rec["joint_names"]]
     parents = rec["parents"].astype(int)
     joints = len(names)
-    if any(parents[j] >= j for j in range(joints)):
-        raise ValueError("Joint parents must come before their children.")
     to_runtime = _xf_to_mat(rec["model_to_runtime"])
     rest_target = [to_runtime @ _xf_to_mat(x).inverted() for x in rec["inverse_bind"]]
     poses = rec["poses"]
@@ -161,6 +204,7 @@ def import_recording(context, path: Path, options: ImportOptions) -> ImportResul
     verts = points @ rotation.T + np.array(to_runtime.translation)
     mesh = bpy.data.meshes.new(f"MB_{path.stem}_body")
     mesh.from_pydata(verts.tolist(), [], rec["faces"].astype(int).tolist())
+    mesh.validate(verbose=False)
     mesh.update()
     mesh.polygons.foreach_set("use_smooth", [True] * len(mesh.polygons))
     body = _link(collection, bpy.data.objects.new(f"MB_{path.stem}_body", mesh))
@@ -228,7 +272,7 @@ def import_recording(context, path: Path, options: ImportOptions) -> ImportResul
         target = Vector(roots[0])
         for frame in range(frames):
             target = target.lerp(Vector(roots[frame]), 0.08)
-            look = Vector((target.x, target.y, 0.9))
+            look = Vector((target.x, target.y, max(0.9, target.z)))
             camera.location = look + Vector((-4.2, -1.6, 1.4))
             camera.rotation_euler = (look - camera.location).to_track_quat("-Z", "Y").to_euler()
             camera.keyframe_insert("location", frame=first + frame)

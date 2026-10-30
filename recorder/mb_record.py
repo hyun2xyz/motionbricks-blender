@@ -27,6 +27,10 @@ import time as _time
 import types
 from pathlib import Path
 
+# The MotionBricks checkout goes first on the import path, so check that this is one (a stray numpy.py in some
+# other folder would otherwise be imported).
+if not all((Path.cwd() / name).is_dir() for name in ("motionbricks", "app")):
+    raise SystemExit("Run this from the root of your motionbricks checkout with 'uv run python ...'.")
 sys.path.insert(0, str(Path.cwd()))
 
 try:
@@ -187,7 +191,7 @@ def main() -> None:
         format_version=np.int32(FORMAT_VERSION),
         source=np.array(json.dumps({
             "motionbricks": motionbricks_version,
-            "scene": str(args.scene),
+            "scene": args.scene.name,  # the name only: a full path would carry the user's folder names
             "mode": "script" if args.script else "play",
             "script": args.script,
             "recorded_at": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),

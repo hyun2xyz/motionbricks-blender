@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "motionbricks_importer"
-version = "0.1.0"
+version = "0.1.1"
 name = "MotionBricks Importer (unofficial)"
 tagline = "Import MotionBricks motion recordings as an animated character"
 maintainer = "hyun2xyz"

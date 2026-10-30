@@ -36,6 +36,10 @@ import math
 import sys
 from pathlib import Path
 
+# The MotionBricks checkout goes first on the import path, so check that this is one (a stray numpy.py in some
+# other folder would otherwise be imported).
+if not all((Path.cwd() / name).is_dir() for name in ("motionbricks", "app")):
+    sys.exit("Run this from the root of your motionbricks checkout: uv run python path/to/mb_walk.py ...")
 sys.path.insert(0, str(Path.cwd()))
 
 try:
@@ -186,7 +190,8 @@ class Walker:
                 self.generations += 1
                 stop_left = player.time_to_transition + 0.5
             elif stop_left is None:
-                turned = steer is not None and math.degrees(math.acos(min(1.0, float(direction @ steer)))) > TURN_THRESHOLD
+                turned = steer is not None and math.degrees(
+                    math.acos(max(-1.0, min(1.0, float(direction @ steer))))) > TURN_THRESHOLD
                 if steer is None or turned or player.time_to_transition <= dt:
                     ground = pos + direction * speed * LEAD_SECONDS
                     place_target_poses(wp.vec3(*ground), wp.vec3(*direction), tmpl, target_poses, stream=engine.stream)
@@ -243,8 +248,6 @@ def main():
     parser.add_argument("--keep-arms", action="store_true", help="keep the generated arm swing in the template "
                         "(by default the template gets the stand pose's relaxed arms)")
     args = parser.parse_args()
-    if not Path("motionbricks").is_dir():
-        sys.exit("Run this from the root of your motionbricks checkout.")
     course = json.loads(args.course.read_text(encoding="utf-8-sig"))
     speed = float(course.get("speed", 1.2))
     waypoints = [tuple(p[:2]) for p in course["waypoints"]]

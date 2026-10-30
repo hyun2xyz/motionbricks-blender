@@ -4,7 +4,8 @@
 """MotionBricks Importer (unofficial): bring NVIDIA MotionBricks motion recordings into Blender.
 
 File > Import > MotionBricks (.npz), or the MotionBricks tab in the 3D Viewport sidebar (N).
-Record the .npz with recorder/mb_record.py from https://github.com/hyun2xyz/motionbricks-blender.
+Make the .npz with walker/mb_walk.py (or recorder/mb_record.py) from
+https://github.com/hyun2xyz/motionbricks-blender.
 Not affiliated with or endorsed by NVIDIA.
 """
 
@@ -63,7 +64,7 @@ class IMPORT_SCENE_OT_motionbricks(bpy.types.Operator, ImportHelper):
         started = time.perf_counter()
         try:
             result = importer.import_recording(context, path, options)
-        except (OSError, ValueError, KeyError) as error:
+        except (OSError, ValueError, KeyError, IndexError, TypeError) as error:
             self.report({"ERROR"}, f"MotionBricks import failed: {error}")
             return {"CANCELLED"}
         seconds = time.perf_counter() - started
@@ -93,7 +94,7 @@ class VIEW3D_PT_motionbricks(bpy.types.Panel):
         if context.scene.camera:
             row.operator("view3d.view_camera", text="Camera View", icon="VIEW_CAMERA")
         layout.separator()
-        layout.label(text="Record .npz files with mb_record.py", icon="INFO")
+        layout.label(text="Make .npz files with mb_walk.py", icon="INFO")
 
 
 def menu_import(self, context):

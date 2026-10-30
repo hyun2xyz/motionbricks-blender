@@ -34,7 +34,8 @@ Check each with its version command, and install only what is missing (ask first
 | Blender 4.2+ | `blender --version` | `winget install BlenderFoundation.Blender` | https://www.blender.org/download/ |
 
 Then run `git lfs install` once. On Windows, Blender is usually at
-`C:\Program Files\Blender Foundation\Blender <version>\blender.exe`; use that full path if `blender` is not on PATH.
+`C:\Program Files\Blender Foundation\Blender <version>\blender.exe`; use that full path if `blender` is not on PATH
+(in PowerShell, put `&` before the quoted path: `& "C:\Program Files\...\blender.exe" --version`).
 
 ## 2. MotionBricks
 
@@ -43,11 +44,13 @@ In the chosen folder:
 ```sh
 git clone --branch v0.2.0 https://github.com/NVlabs/motionbricks.git
 cd motionbricks
+git rev-parse HEAD
 git lfs pull
 uv sync
 ```
 
-The clone with model files is about 2.5 GB; `uv sync` builds a Python environment of about 4 GB. Each takes a few
+`git rev-parse HEAD` must print `54fc563aeaaf819a753d72cc9fdc6713989cdd43` (the v0.2.0 release). If it prints
+anything else, stop and tell the user. The clone with model files is about 2.5 GB; `uv sync` builds a Python environment of about 4 GB. Each takes a few
 minutes. If git reports "dubious ownership" (common on exFAT or network drives), run that one command with
 `git -c safe.directory=* ...` instead of changing the global config.
 
@@ -60,10 +63,13 @@ git clone https://github.com/hyun2xyz/motionbricks-blender.git
 curl -L -o motionbricks_importer-0.1.0.zip https://github.com/hyun2xyz/motionbricks-blender/releases/download/v0.1.0/motionbricks_importer-0.1.0.zip
 ```
 
-In Windows PowerShell, write `curl.exe` (plain `curl` is an alias there). The zip's SHA-256 is
-`dea3189a71e64e2f35a76aefc42f4a51b14aae980dc397cfb221fdf9a0796c71`; check it (`sha256sum` on Linux,
-`Get-FileHash motionbricks_importer-0.1.0.zip` in PowerShell). Install and enable
-the add-on (Blender stays closed):
+In Windows PowerShell, write `curl.exe` (plain `curl` is an alias there). Then compare the zip's SHA-256, and if it
+does not match, **stop**: delete the zip and tell the user.
+
+- Linux: `echo "dea3189a71e64e2f35a76aefc42f4a51b14aae980dc397cfb221fdf9a0796c71  motionbricks_importer-0.1.0.zip" | sha256sum -c` must print `OK`.
+- PowerShell: `(Get-FileHash motionbricks_importer-0.1.0.zip -Algorithm SHA256).Hash -eq 'DEA3189A71E64E2F35A76AEFC42F4A51B14AAE980DC397CFB221FDF9A0796C71'` must print `True`.
+
+Install and enable the add-on (Blender stays closed):
 
 ```sh
 blender --command extension install-file -r user_default -e motionbricks_importer-0.1.0.zip
