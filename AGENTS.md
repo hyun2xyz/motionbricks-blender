@@ -60,19 +60,19 @@ Next to the `motionbricks` folder:
 
 ```sh
 git clone https://github.com/hyun2xyz/motionbricks-blender.git
-curl -L -o motionbricks_importer-0.1.0.zip https://github.com/hyun2xyz/motionbricks-blender/releases/download/v0.1.0/motionbricks_importer-0.1.0.zip
+curl -L -o motionbricks_importer-0.1.1.zip https://github.com/hyun2xyz/motionbricks-blender/releases/download/v0.1.1/motionbricks_importer-0.1.1.zip
 ```
 
 In Windows PowerShell, write `curl.exe` (plain `curl` is an alias there). Then compare the zip's SHA-256, and if it
 does not match, **stop**: delete the zip and tell the user.
 
-- Linux: `echo "dea3189a71e64e2f35a76aefc42f4a51b14aae980dc397cfb221fdf9a0796c71  motionbricks_importer-0.1.0.zip" | sha256sum -c` must print `OK`.
-- PowerShell: `(Get-FileHash motionbricks_importer-0.1.0.zip -Algorithm SHA256).Hash -eq 'DEA3189A71E64E2F35A76AEFC42F4A51B14AAE980DC397CFB221FDF9A0796C71'` must print `True`.
+- Linux: `echo "a013822cda017634bd5f690a8946760cf4190e9fd4e196bf9ae6d50a7d4fb2cf  motionbricks_importer-0.1.1.zip" | sha256sum -c` must print `OK`.
+- PowerShell: `(Get-FileHash motionbricks_importer-0.1.1.zip -Algorithm SHA256).Hash -eq 'A013822CDA017634BD5F690A8946760CF4190E9FD4E196BF9AE6D50A7D4FB2CF'` must print `True`.
 
 Install and enable the add-on (Blender stays closed):
 
 ```sh
-blender --command extension install-file -r user_default -e motionbricks_importer-0.1.0.zip
+blender --command extension install-file -r user_default -e motionbricks_importer-0.1.1.zip
 ```
 
 ## 4. Generate a walk

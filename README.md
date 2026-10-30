@@ -111,8 +111,9 @@ motions, so treat these recordings as internal tests.
 
 ## 3. Install the add-on
 
-1. Download `motionbricks_importer-0.1.0.zip` from the
+1. Download `motionbricks_importer-0.1.1.zip` from the
    [Releases](https://github.com/hyun2xyz/motionbricks-blender/releases) page. Do not unzip it.
+   Its SHA-256 is `a013822cda017634bd5f690a8946760cf4190e9fd4e196bf9ae6d50a7d4fb2cf`.
 2. In Blender: **Edit › Preferences › Add-ons**, open the **⌄** menu at the top right, choose
    **Install from Disk…** and pick the zip.
 3. Make sure **MotionBricks Importer (unofficial)** is ticked.
@@ -170,7 +171,7 @@ NVIDIA **MotionBricks**가 만든 동작을 Blender로 가져오는 무료 애�
    - **Scene Preview 녹화**: `uv run python …/recorder/mb_record.py --scene … --out my_walk.npz`
      - 창이 뜨면 W A S D로 걷고, Space로 뜁니다. 창을 닫으면 저장됩니다.
      - 데모 장면과 Smart Primitive는 평가 전용 샘플 동작을 쓰므로 내부 시험용입니다.
-3. **애드온 설치**: Releases에서 `motionbricks_importer-0.1.0.zip`을 받습니다(압축은 풀지 않습니다).
+3. **애드온 설치**: Releases에서 `motionbricks_importer-0.1.1.zip`을 받습니다(압축은 풀지 않습니다). SHA-256은 위 영어 안내 3번에 있습니다.
    - Blender **Edit › Preferences › Add-ons** → 오른쪽 위 **⌄** → **Install from Disk…**
 4. **가져오기**: **File › Import › MotionBricks (.npz)**, 또는 3D 뷰에서 **N** → **MotionBricks** 탭 → **Import Motion (.npz)**
    - Space로 재생합니다.
